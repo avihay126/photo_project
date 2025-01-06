@@ -1,10 +1,15 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
-from datetime import datetime, timedelta
-from ..models import Photographer, RefreshToken
+from flask_jwt_extended import (
+    create_access_token, 
+    jwt_required, 
+    get_jwt_identity, 
+    set_access_cookies,
+    unset_jwt_cookies
+)
+from datetime import timedelta
+from ..models import Photographer
 from .. import db
-import uuid
 
 photographer_routes = Blueprint('photographer_routes', __name__)
 
@@ -46,24 +51,11 @@ def login():
     if not user or not check_password_hash(user.password, data['password']):
         return jsonify({"error": "Invalid email or password"}), 401
     
-    access_token = create_access_token(identity=str(user.id))
-    refresh_token = str(uuid.uuid4())
-    refresh_entry = RefreshToken(
-        token=refresh_token,
-        user_id=user.id,
-        expires_at=datetime.utcnow() + timedelta(days=7)
-    )
+    access_token = create_access_token(identity=str(user.id), expires_delta=timedelta(days=1))
 
-    try:
-        db.session.add(refresh_entry)
-        db.session.commit()
-        response = jsonify({"message": "Login successful"})
-        response.set_cookie('access_token_cookie', access_token, httponly=True)
-        response.set_cookie('refresh_token_cookie', refresh_token, httponly=True)
-        return response, 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+    response = jsonify({"message": "Login successful"})
+    set_access_cookies(response, access_token)
+    return response, 200
     
 
 @photographer_routes.route('/protected', methods=['GET'])
@@ -79,38 +71,8 @@ def protected():
 
 
 
-
-@photographer_routes.route('/refresh', methods=['POST'])
-def refresh():
-    refresh_token = request.cookies.get('refresh_token_cookie')
-
-    if not refresh_token:
-        return jsonify({"error": "No refresh token provided"}), 401
-
-    token_entry = RefreshToken.query.filter_by(token=refresh_token).first()
-    if not token_entry or token_entry.expires_at < datetime.utcnow():
-        return jsonify({"error": "Invalid or expired refresh token"}), 401
-
-    access_token = create_access_token(identity=token_entry.user_id)
-    response = jsonify({"message": "Token refreshed successfully"})
-    response.set_cookie('access_token_cookie', access_token, httponly=True)
-    return response, 200
-
-
-
-
-
 @photographer_routes.route('/logout', methods=['POST'])
 def logout():
-    refresh_token = request.cookies.get('refresh_token_cookie')
-
-    if refresh_token:
-        token_entry = RefreshToken.query.filter_by(token=refresh_token).first()
-        if token_entry:
-            db.session.delete(token_entry)
-            db.session.commit()
-
     response = jsonify({"message": "Logout successful"})
-    response.delete_cookie('access_token_cookie')
-    response.delete_cookie('refresh_token_cookie')
+    unset_jwt_cookies(response)
     return response, 200
