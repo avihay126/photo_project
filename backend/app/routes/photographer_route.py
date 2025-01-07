@@ -1,9 +1,7 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
-    create_access_token, 
-    jwt_required, 
-    get_jwt_identity, 
+    create_access_token,
     set_access_cookies,
     unset_jwt_cookies
 )
@@ -55,19 +53,11 @@ def login():
 
     response = jsonify({"message": "Login successful"})
     set_access_cookies(response, access_token)
+    
     return response, 200
     
 
-@photographer_routes.route('/protected', methods=['GET'])
-@jwt_required()
-def protected():
-    user_id = get_jwt_identity()
-    user = Photographer.query.get(user_id)
 
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    return jsonify({"message": f"Welcome, {user.name}!"}), 200
 
 
 

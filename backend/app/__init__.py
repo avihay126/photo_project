@@ -24,7 +24,9 @@ def create_app():
         from . import models
         db.create_all()
 
-    from .routes.photographer_route import photographer_routes 
+    from .routes.photographer_route import photographer_routes
+    from .routes.event_route import event_route
     my_app.register_blueprint(photographer_routes)
+    my_app.register_blueprint(event_route)
 
     return my_app
