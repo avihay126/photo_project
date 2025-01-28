@@ -1,0 +1,4 @@
+2025-01-28 17:08:45,067 - flask_app - WARNING - register func
+2025-01-28 17:10:39,606 - photographer_route.py - register - Line 26 - WARNING - register func
+2025-01-28 17:12:27,595 - ERROR - photographer_route.py - login() - Line 54 - login func
+2025-01-28 17:13:01,567 - INFO - photographer_route.py - logout() - Line 76 - logout func

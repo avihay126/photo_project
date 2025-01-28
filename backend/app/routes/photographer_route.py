@@ -3,18 +3,25 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     create_access_token,
     set_access_cookies,
-    unset_jwt_cookies
+    unset_jwt_cookies,
+    get_jwt_identity
 )
 from datetime import timedelta
 from ..models import Photographer
 from .. import db
 
+
 photographer_routes = Blueprint('photographer_routes', __name__)
+
+def protected():
+    user_id = get_jwt_identity()
+    user = Photographer.query.get(user_id)
+    return user
 
 @photographer_routes.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-
+    
     if not data or not data.get('name') or not data.get('password') or not data.get('email') or not data.get('phone'):
         return jsonify({"error": "Missing required fields"}), 400
 
@@ -41,7 +48,6 @@ def register():
 @photographer_routes.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-
     if not data or not data.get('email') or not data.get('password'):
         return jsonify({"error": "Missing email or password"}), 400
 

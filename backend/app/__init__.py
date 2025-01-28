@@ -9,6 +9,7 @@ db = SQLAlchemy()
 
 def create_app():
     my_app = Flask(__name__)
+    # my_app.config['DEBUG'] = True
     load_dotenv()
     my_app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     
@@ -26,7 +27,9 @@ def create_app():
 
     from .routes.photographer_route import photographer_routes
     from .routes.event_route import event_route
+    from .routes.uploader_route import uploader_routes
     my_app.register_blueprint(photographer_routes)
     my_app.register_blueprint(event_route)
+    my_app.register_blueprint(uploader_routes)
 
     return my_app
